@@ -19,7 +19,11 @@ local hidden = {
       fromSecretRef(name, secretRefName, secretRefKey)::
         super.name(name) +
         super.mixin.valueFrom.secretKeyRef.name(secretRefName) +
-        super.mixin.valueFrom.secretKeyRef.key(secretRefKey)
+        super.mixin.valueFrom.secretKeyRef.key(secretRefKey),
+
+      fromFieldPath(name, fieldPath)::
+        container.envType.name(name) +
+        container.envType.mixin.valueFrom.fieldRef.fieldPath(fieldPath),
     },
 
     volumeMountsType:: container.volumeMountsType + {
