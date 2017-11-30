@@ -438,27 +438,6 @@ func (va *versionedAPI) root() *root {
 	return va.parent.parent
 }
 
-func inObjectKinds(a kubespec.ObjectKind, list []kubespec.ObjectKind) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
-
-var (
-	skippedObjects = []kubespec.ObjectKind{
-	// // "CustomResourceDefinition",
-	// "CustomResourceDefinitionSpec",
-	// "CustomResourceValidation",
-	// "JSONSchemaProps",
-	// "JSONSchemaPropsOrArray",
-	// "JSONSchemaPropsOrBool",
-	// "JSONSchemaPropsOrStringArray",
-	}
-)
-
 func (va *versionedAPI) emit(m *indentWriter) error {
 	// NOTE: Do not need to call `jsonnet.RewriteAsIdentifier`.
 	line := fmt.Sprintf("%s:: {", va.version)
@@ -476,11 +455,6 @@ func (va *versionedAPI) emit(m *indentWriter) error {
 
 	// Emit in sorted order so that we can diff the output.
 	for _, object := range va.apiObjects.toSortedSlice() {
-		// skipping CRDs
-		if inObjectKinds(object.name, skippedObjects) {
-			continue
-		}
-
 		if err := object.emit(m); err != nil {
 			return err
 		}
