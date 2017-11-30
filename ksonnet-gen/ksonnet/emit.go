@@ -109,11 +109,25 @@ func newRoot(spec *kubespec.APISpec, ksonnetLibSHA, k8sSHA *string) (*root, erro
 		isLegacySchema: uls,
 	}
 
+	crds := map[kubespec.DefinitionName]bool{}
+	for defName, def := range spec.Definitions {
+		if def.IsCRD() {
+			crds[defName] = false
+			ref := def.Properties["Schema"]
+			def := strings.TrimPrefix(string(*ref.Ref), "#/definitions/")
+			crds[kubespec.DefinitionName(def)] = false
+		}
+	}
+
 	for defName, def := range spec.Definitions {
 		if !uls {
 			if def.IsDeprecated() {
 				continue
 			}
+		}
+
+		if _, isCRD := crds[defName]; isCRD {
+			continue
 		}
 
 		if err := r.addDefinition(defName, def); err != nil {

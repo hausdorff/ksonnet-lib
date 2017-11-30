@@ -1,6 +1,8 @@
 package kubespec
 
-import "strings"
+import (
+	"strings"
+)
 
 // APISpec represents an OpenAPI specification of an API.
 type APISpec struct {
@@ -49,6 +51,12 @@ func (sd *SchemaDefinition) IsDeprecated() bool {
 	}
 
 	return false
+}
+
+// IsCRD returns true if the definition represents a CRD.
+func (sd *SchemaDefinition) IsCRD() bool {
+	_, ok := sd.Properties["Schema"]
+	return ok
 }
 
 // QualifiedGroupName is the qualified group name. It is retrieved
