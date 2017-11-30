@@ -36,6 +36,17 @@ type SchemaDefinition struct {
 	TopLevelSpecs TopLevelSpecs `json:"x-kubernetes-group-version-kind"`
 }
 
+// QualifiedGroupName is the qualified group name. It is retrieved
+// from the x-kubernetes-group-version-kind field. If it doesn't
+// exist, the group name is returned.
+func (sd *SchemaDefinition) QualifiedGroupName(groupName string) string {
+	if len(sd.TopLevelSpecs) > 0 && sd.TopLevelSpecs[0].Group != "" {
+		return string(sd.TopLevelSpecs[0].Group)
+	}
+
+	return groupName
+}
+
 // TopLevelSpec is a property that exists on `SchemaDefinition`s for
 // top-level API objects.
 type TopLevelSpec struct {
@@ -89,6 +100,36 @@ type ObjectRef string
 
 func (or ObjectRef) String() string {
 	return string(or)
+}
+
+// IsMixinRef will check whether a `ObjectRef` refers to an API object
+// that can be turned into a mixin. This should be true of the vast
+// majority of non-nil `ObjectRef`s. The most common exception is
+// `IntOrString`, which should not be turned into a mixin, and should
+// instead by transformed into a property method that behaves
+// identically to one taking an int or a ref as argument.
+func (or *ObjectRef) IsMixinRef() bool {
+	if or == nil {
+		return false
+	}
+
+	return stringInSlice(string(*or), objectInRefExceptions)
+}
+
+var (
+	objectInRefExceptions = []string{
+		"#/definitions/io.k8s.apimachinery.pkg.util.intstr.IntOrString",
+		"#/definitions/io.k8s.apiextensions-apiserver.pkg.apis.apiextensions.v1beta1.JSONSchemaPropsOrBool",
+	}
+)
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }
 
 // PropertyName represents the name of a property. For example,

@@ -13,15 +13,43 @@ const constructorName = "new"
 // instead by transformed into a property method that behaves
 // identically to one taking an int or a ref as argument.
 func isMixinRef(or *kubespec.ObjectRef) bool {
-	return or != nil && *or != "#/definitions/io.k8s.apimachinery.pkg.util.intstr.IntOrString"
+	if or != nil {
+		return false
+	}
+
+	return stringInSlice(string(*or), objectInRefExceptions)
 }
 
-var specialProperties = map[kubespec.PropertyName]kubespec.PropertyName{
-	"apiVersion": "apiVersion",
-	"kind":       "kind",
+var (
+	objectInRefExceptions = []string{
+		"#/definitions/io.k8s.apimachinery.pkg.util.intstr.IntOrString",
+		"#/definitions/io.k8s.apiextensions-apiserver.pkg.apis.apiextensions.v1beta1.JSONSchemaPropsOrBool",
+	}
+)
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }
 
-var specialPropertiesList = []string{"apiVersion", "kind"}
+var (
+	specialProperties = map[kubespec.PropertyName]kubespec.PropertyName{
+		"apiVersion": "apiVersion",
+		"kind":       "kind",
+	}
+
+	specialPropertiesList []string
+)
+
+func init() {
+	for k := range specialProperties {
+		specialPropertiesList = append(specialPropertiesList, string(k))
+	}
+}
 
 func isSpecialProperty(pn kubespec.PropertyName) bool {
 	_, ok := specialProperties[pn]
