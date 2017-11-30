@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/ksonnet/ksonnet-lib/ksonnet-gen/jsonnet"
 	"github.com/ksonnet/ksonnet-lib/ksonnet-gen/kubespec"
 	"github.com/ksonnet/ksonnet-lib/ksonnet-gen/kubeversion"
@@ -111,6 +110,12 @@ func newRoot(spec *kubespec.APISpec, ksonnetLibSHA, k8sSHA *string) (*root, erro
 	}
 
 	for defName, def := range spec.Definitions {
+		if !uls {
+			if def.IsDeprecated() {
+				continue
+			}
+		}
+
 		if err := r.addDefinition(defName, def); err != nil {
 			cause := errors.Cause(err)
 			if cause != errExists {
@@ -262,16 +267,12 @@ func (r *root) createAPIObject(
 
 	apiObject := newAPIObject(parsedName, versionedAPI, def)
 
-	ao, ok := versionedAPI.apiObjects[parsedName.Kind]
+	_, ok = versionedAPI.apiObjects[parsedName.Kind]
 	if ok {
 		var names []string
 		for _, ao := range versionedAPI.apiObjects {
 			names = append(names, string(ao.name))
 		}
-
-		spew.Dump(ao.parsedName, apiObject.parsedName)
-
-		fmt.Printf("current contents: %#v\n", names)
 
 		return nil,
 			errors.Errorf("Duplicate object kinds with name '%s'", dn)

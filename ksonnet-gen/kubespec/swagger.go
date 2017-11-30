@@ -1,5 +1,7 @@
 package kubespec
 
+import "strings"
+
 // APISpec represents an OpenAPI specification of an API.
 type APISpec struct {
 	SwaggerVersion string            `json:"swagger"`
@@ -34,6 +36,19 @@ type SchemaDefinition struct {
 	Required      []string      `json:"required"`    // nullable.
 	Properties    Properties    `json:"properties"`  // nullable.
 	TopLevelSpecs TopLevelSpecs `json:"x-kubernetes-group-version-kind"`
+	Ref           string        `json:"$ref,omitempty"`
+}
+
+// IsDeprecated returns true if the definition has a description
+// that starts with "Deprecated" and a $ref that is not empty.
+func (sd *SchemaDefinition) IsDeprecated() bool {
+	if strings.HasPrefix(sd.Description, "Deprecated") {
+		if sd.Ref != "" {
+			return true
+		}
+	}
+
+	return false
 }
 
 // QualifiedGroupName is the qualified group name. It is retrieved
