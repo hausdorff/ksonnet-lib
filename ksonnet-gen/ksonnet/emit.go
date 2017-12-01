@@ -126,7 +126,9 @@ func newRoot(spec *kubespec.APISpec, ksonnetLibSHA, k8sSHA *string) (*root, erro
 			}
 		}
 
-		if _, isCRD := crds[defName]; isCRD {
+		_, isCRD := crds[defName]
+		isBlacklisted := kubeversion.IsBlacklistedID(r.spec.Info.Version, defName)
+		if isCRD || isBlacklisted {
 			continue
 		}
 
@@ -476,6 +478,15 @@ func (va *versionedAPI) emit(m *indentWriter) error {
 
 	// Emit in sorted order so that we can diff the output.
 	for _, object := range va.apiObjects.toSortedSlice() {
+		objName, err := object.parsedName.Unparse(false)
+		if err != nil {
+			return err
+		}
+
+		if kubeversion.IsBlacklistedID(va.root().spec.Info.Version, objName) {
+			continue
+		}
+
 		if err := object.emit(m); err != nil {
 			return err
 		}

@@ -136,15 +136,8 @@ func (or *ObjectRef) IsMixinRef() bool {
 		return false
 	}
 
-	return stringInSlice(string(*or), objectInRefExceptions)
+	return *or != "#/definitions/io.k8s.apimachinery.pkg.util.intstr.IntOrString"
 }
-
-var (
-	objectInRefExceptions = []string{
-		"#/definitions/io.k8s.apimachinery.pkg.util.intstr.IntOrString",
-		"#/definitions/io.k8s.apiextensions-apiserver.pkg.apis.apiextensions.v1beta1.JSONSchemaPropsOrBool",
-	}
-)
 
 func stringInSlice(a string, list []string) bool {
 	for _, b := range list {
